@@ -1,18 +1,15 @@
-const uuid = require('uuid');
 const express = require('express');
-const onFinished = require('on-finished');
 const bodyParser = require('body-parser');
 const path = require('path');
 const port = 3000;
-const fs = require('fs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const JWT_SECRET = 'jwt';
-const JWT_EXPIRES = '15s';
+const JWT_SECRET = 'jwt_secret';
+const JWT_EXPIRES = '30s';
 
 const SESSION_KEY = 'Authorization';
 
