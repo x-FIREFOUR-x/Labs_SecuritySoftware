@@ -14,13 +14,13 @@ const timeToken = 86000
 const app = express();
 app.use(express.json());
 
-const authTokenUrl = "https://dev-boktwe0ddzg4fbxp.us.auth0.com/oauth/token";
 const authUrl = "https://dev-boktwe0ddzg4fbxp.us.auth0.com";
+const authTokenUrl = "https://dev-boktwe0ddzg4fbxp.us.auth0.com/oauth/token";
 const codeUrl = "https://dev-boktwe0ddzg4fbxp.us.auth0.com/authorize?response_type=code&client_id=NUbowJ9dUEIlsBFVVxWewXPYn1w64iOg&redirect_uri=http://localhost:3000&scope=offline_access";
 const jwksUri = "https://dev-boktwe0ddzg4fbxp.us.auth0.com/.well-known/jwks.json";
 
-const clientId = "NUbowJ9dUEIlsBFVVxWewXPYn1w64iOg"
-const clientSecret = "r7tHnx90eZOstXEgDWbiQiuN0rFI6E8I1omrXs3eQ2ngCtheXhwYj7cxhahSwVNe"
+const clientId = process.env.CLIENT_ID
+const clientSecret = process.env.CLIENT_SECRET
 
 const jwksClientInstance = jwksClient({
   jwksUri,
@@ -64,7 +64,6 @@ app.get("/", (req, res) => {
 
 app.get("/logout", (req, res) => {
   res.redirect("/");
-  console.log("1");
 });
 
 
@@ -88,7 +87,7 @@ app.post('/api/login', (req, res) => {
     })
     .catch((error) => {
       console.log(error);
-      res.status(401).json("Fail login");
+      res.status(401).json("Fail login" + error?.message);
     });
     
 });
