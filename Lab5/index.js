@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const jwksClient = require("jwks-rsa");
 const url = require("url")
 const axios = require("axios");
+const { auth } = require('express-oauth2-jwt-bearer');
 
 require("dotenv").config();
 
@@ -25,6 +26,11 @@ const clientSecret = process.env.CLIENT_SECRET
 const jwksClientInstance = jwksClient({
   jwksUri,
   cache: true,
+});
+
+const checkJwt = auth({
+  audience: `${authUrl}/api/v2/`,
+  issuerBaseURL: authUrl
 });
 
 const indexPath = path.join(__dirname + "/index.html");
@@ -66,6 +72,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
+app.get('/auth-verify', checkJwt, (req, res) => {
+  delete req.auth.token;
+  res.json({ auth: req.auth });
+});
 
 app.post('/api/login', (req, res) => {
   const { login, password } = req.body;
