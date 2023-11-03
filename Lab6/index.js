@@ -1,71 +1,44 @@
 const express = require("express");
 const path = require("path");
-const jwt = require("jsonwebtoken");
-const jwksClient = require("jwks-rsa");
-const url = require("url")
 const axios = require("axios");
+const { auth, requiresAuth } = require('express-openid-connect');
 
-require("dotenv").config();
 
 const port = 3000;
 
-const timeToken = 86000
-
-const app = express();
-app.use(express.json());
-
 const authUrl = "https://dev-boktwe0ddzg4fbxp.us.auth0.com";
 const authTokenUrl = "https://dev-boktwe0ddzg4fbxp.us.auth0.com/oauth/token";
-const codeUrl = "https://dev-boktwe0ddzg4fbxp.us.auth0.com/authorize?response_type=code&client_id=NUbowJ9dUEIlsBFVVxWewXPYn1w64iOg&redirect_uri=http://localhost:3000&scope=offline_access";
-const jwksUri = "https://dev-boktwe0ddzg4fbxp.us.auth0.com/.well-known/jwks.json";
 
-const clientId = process.env.CLIENT_ID
-const clientSecret = process.env.CLIENT_SECRET
+require("dotenv").config();
 
-const jwksClientInstance = jwksClient({
-  jwksUri,
-  cache: true,
-});
+const config = {
+  authRequired: true,
+  auth0Logout: true,
+  baseURL: 'http://localhost:3000',
+  clientID: process.env.CLIENT_ID,
+  issuerBaseURL: authUrl,
+  secret: process.env.CLIENT_SECRET,
+  logoutParams: {
+    returnTo: 'http://localhost:3000/logout', // Specify your custom return URL after logout
+  },
+};
+
+
+const app = express();
+app.set('view engine', 'ejs');
+app.use(express.json());
+app.use(auth(config));
 
 const indexPath = path.join(__dirname + "/index.html");
 
 
 app.get("/", (req, res) => {
-  const token = req?.headers["authorization"];
-  if (token) {
-      const decodedToken = jwt.decode(token, {complete: true});
-
-      const decodedHeader = decodedToken?.header;
-
-      const currentTime = Math.floor(Date.now() / 1000);
-      const timeExpiresToken = decodedToken.payload.exp;
-
-      jwksClientInstance.getSigningKey(decodedHeader.kid, (error, key) => {
-        if(error) {
-          console.log(error);
-        }
-        const signingKey = key.publicKey || key.rsaPublicKey;
-        jwt.verify(token, signingKey, (error, decoded) => {
-          if (error) {
-            return res.status(401).sendFile(indexPath);
-          }
-          if(timeExpiresToken - currentTime <= timeToken){
-            console.log("refresh token");
-          } else {
-            return res.status(200).json({login: decoded.sub});
-          }
-        });
-      });
+  if (req.oidc.isAuthenticated()) {
+    res.render('profile', { User: req.oidc.user.email });
   } else {
     res.sendFile(path.join(indexPath));
   }
 });
-
-
-app.get("/logout", (req, res) => {
-  res.redirect("/");
-});
-
 
 app.post('/api/login', (req, res) => {
   const { login, password } = req.body;
