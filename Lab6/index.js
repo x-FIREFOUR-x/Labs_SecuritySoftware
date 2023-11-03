@@ -45,7 +45,7 @@ app.post('/api/login', (req, res) => {
 
   const requestBody = {
     audience: `${authUrl}/api/v2/`,
-    grant_type: "password",
+    grant_type: "authorization code",
     client_id: clientId,
     client_secret: clientSecret,
     username: login,
